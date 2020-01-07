@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import React, { useState, useEffect } from 'react';
+import marked from 'marked';
 
 import './App.css';
 
@@ -7,6 +7,8 @@ const initialExample = `
 # H1
 
 ## H2
+
+[This is a link](https://www.freecodecamp.org)
 
 * Unordered list can use asterisks
 - Or minuses
@@ -34,8 +36,26 @@ print s
 And **bolded text**.
 `
 
+marked.setOptions({
+    renderer: new marked.Renderer(),
+    pedantic: false,
+    gfm: true,
+    breaks: true,
+});
+
 function App() {
     const [markdown, setMarkdown] = useState(initialExample);
+    const [html, setHtml] = useState('');
+
+    useEffect(() => {
+        const tokens = marked.lexer(markdown);
+        const parsedHtml = marked.parser(tokens);
+        setHtml(parsedHtml)
+    }, [markdown]);
+
+    const handleChange = (event) => {
+        setMarkdown(event.target.value)
+    }
 
     return (
         <div className="d-flex flex-column h-100">
@@ -55,7 +75,7 @@ function App() {
                                 id="editor"
                                 className="form-control border-0 rounded-0 mh-100 bg-light text-dark"
                                 value={markdown}
-                                onChange={(event) => setMarkdown(event.target.value)}
+                                onChange={(event) => handleChange(event)}
                                 // onChange -> set markdown -> parse to html -> render html
                             >{markdown}</textarea>
                         </div>
@@ -64,7 +84,12 @@ function App() {
                     <div className="border-bottom">
                             <h6 className="text-muted m-0 pl-4 py-3">PREVIEW</h6>
                         </div>
-                        <ReactMarkdown source={markdown} id="preview" className="flex-grow-1 border-left mh-100 p-3 text-dark"></ReactMarkdown>
+                        <div
+                            id="preview"
+                            className="flex-grow-1 border-left mh-100 p-3 text-dark" 
+                            dangerouslySetInnerHTML={{__html: html}}
+                        >
+                        </div>
                     </div>
                 </div>
             </main>
